@@ -21,30 +21,31 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
-use Elcodi\Component\Plugin\Services\PluginManager;
+use Elcodi\Component\Plugin\Entity\Plugin;
+use Elcodi\Component\Plugin\Repository\PluginRepository;
 
 /**
- * Class PluginsLoadCommand
+ * Class PluginsListCommand
  */
-class PluginsLoadCommand extends Command
+class PluginsListCommand extends Command
 {
     /**
-     * @var PluginManager
+     * @var PluginRepository
      *
-     * Plugin manager
+     * Plugin repository
      */
-    protected $pluginManager;
+    protected $pluginRepository;
 
     /**
      * Constructor
      *
-     * @param PluginManager $pluginManager Plugin manager
+     * @param PluginRepository $pluginRepository Plugin repository
      */
-    public function __construct(PluginManager $pluginManager)
+    public function __construct(PluginRepository $pluginRepository)
     {
         parent::__construct();
 
-        $this->pluginManager = $pluginManager;
+        $this->pluginRepository = $pluginRepository;
     }
 
     /**
@@ -53,11 +54,11 @@ class PluginsLoadCommand extends Command
     protected function configure()
     {
         $this
-            ->setName('elcodi:plugins:load')
-            ->setDescription('Load plugins')
+            ->setName('elcodi:plugin:list')
             ->setAliases([
-                'plugin:load',
-            ]);
+                'plugin:list',
+            ])
+            ->setDescription('Lists all available plugins');
     }
 
     /**
@@ -71,18 +72,19 @@ class PluginsLoadCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $formatter = $this->getHelper('formatter');
+        $formatterHelper = $this->getHelper('formatter');
         $plugins = $this
-            ->pluginManager
-            ->loadPlugins();
+            ->pluginRepository
+            ->findAll();
 
+        /**
+         * @var Plugin $plugin
+         */
         foreach ($plugins as $plugin) {
-            $formattedLine = $formatter->formatSection(
-                'OK',
-                'Plugin "' . $plugin->getNamespace() . '" installed'
-            );
-
-            $output->writeln($formattedLine);
+            $output->writeln($formatterHelper->formatSection(
+                'Plugin',
+                $plugin->getNamespace() . ' - [Hash : ' . $plugin->getHash() . ']'
+            ));
         }
     }
 }
